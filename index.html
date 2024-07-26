@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Knight's Tour</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+        .chessboard {
+            width: 320px;
+            height: 320px;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            border: 2px solid black;
+            margin-bottom: 20px;
+        }
+        .chessboard div {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 24px;
+            position: relative;
+        }
+        .white {
+            background-color: #ffffff;
+        }
+        .black {
+            background-color: #000000;
+        }
+        .visited::after {
+            content: '❌';
+            font-size: 24px;
+        }
+        .current::after {
+            content: '🐎';
+            font-size: 20px;
+            color: red;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="chessboard" id="chessboard">
+        <!-- Dynamically generated cells will go here -->
+    </div>
+    <div class="controls">
+        <button id="prevButton">Voltar</button>
+        <button id="nextButton">Avançar</button>
+    </div>
+
+    <script>
+        const N = 8;
+        const chessboard = document.getElementById('chessboard');
+        const dx = [2, 1, -1, -2, -2, -1, 1, 2];
+        const dy = [1, 2, 2, 1, -1, -2, -2, -1];
+        let board = [];
+        let path = [];
+        let moveCount = 0;
+        let currentStep = 0;
+
+        // Initialize the chessboard
+        for (let i = 0; i < N; i++) {
+            board[i] = [];
+            for (let j = 0; j < N; j++) {
+                const cell = document.createElement('div');
+                cell.className = (i + j) % 2 === 0 ? 'white' : 'black';
+                cell.id = `${i}-${j}`;
+                chessboard.appendChild(cell);
+                board[i][j] = -1;
+            }
+        }
+
+        function isValidMove(x, y) {
+            return x >= 0 && x < N && y >= 0 && y < N && board[x][y] === -1;
+        }
+
+        function solveKnightsTour(x, y) {
+            if (moveCount === N * N - 1) return true;
+
+            for (let i = 0; i < 8; i++) {
+                const nextX = x + dx[i];
+                const nextY = y + dy[i];
+                if (isValidMove(nextX, nextY)) {
+                    moveCount++;
+                    board[nextX][nextY] = moveCount;
+                    path.push([nextX, nextY]);
+                    if (solveKnightsTour(nextX, nextY)) return true;
+                    // Backtrack
+                    board[nextX][nextY] = -1;
+                    path.pop();
+                    moveCount--;
+                }
+            }
+            return false;
+        }
+
+        function startTour() {
+            const startX = 0, startY = 0;
+            board[startX][startY] = moveCount;
+            path.push([startX, startY]);
+            solveKnightsTour(startX, startY);
+        }
+
+        function updateBoard(step) {
+            for (let i = 0; i < N; i++) {
+                for (let j = 0; j < N; j++) {
+                    document.getElementById(`${i}-${j}`).classList.remove('visited');
+                    document.getElementById(`${i}-${j}`).classList.remove('current');
+                }
+            }
+            for (let i = 0; i < step; i++) {
+                const [x, y] = path[i];
+                document.getElementById(`${x}-${y}`).classList.add('visited');
+            }
+            const [currentX, currentY] = path[step];
+            document.getElementById(`${currentX}-${currentY}`).classList.add('current');
+        }
+
+        document.getElementById('nextButton').addEventListener('click', () => {
+            if (currentStep < path.length - 1) {
+                currentStep++;
+                updateBoard(currentStep);
+            }
+        });
+
+        document.getElementById('prevButton').addEventListener('click', () => {
+            if (currentStep > 0) {
+                currentStep--;
+                updateBoard(currentStep);
+            }
+        });
+
+        startTour();
+    </script>
+</body>
+</html>
+
